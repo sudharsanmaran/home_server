@@ -98,7 +98,6 @@ services:
       - vpn
     restart: unless-stopped
 
-  # Optional - only start if you have spare RAM
   jellyseerr:
     container_name: jellyseerr
     image: fallenbagel/jellyseerr:latest
@@ -111,8 +110,6 @@ services:
     ports:
       - 5055:5055
     restart: unless-stopped
-    profiles:
-      - optional
 
   jellystat-db:
     image: postgres:15.2
@@ -123,8 +120,6 @@ services:
       POSTGRES_PASSWORD: mypassword
     volumes:
       - /data/code/home_server/services/media/jellystat/postgres:/var/lib/postgresql/data
-    profiles:
-      - optional
 
   jellystat:
     image: cyfershepard/jellystat:latest
@@ -143,5 +138,3 @@ services:
       - "3000:3000"
     depends_on:
       - jellystat-db
-    profiles:
-      - optional
