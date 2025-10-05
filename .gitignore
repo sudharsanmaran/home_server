@@ -1,0 +1,32 @@
+# Environment files with secrets
+.env
+**/.env
+!.env.example
+
+# Service configuration directories (contain sensitive data)
+services/*/config/
+services/*/data/
+services/**/prowlarr/
+services/**/radarr/
+services/**/sonarr/
+services/**/jellyseerr/
+services/**/jellystat/
+services/**/rdtclient/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Backups
+*.tar.gz
+*.zip
+backups/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
