@@ -54,8 +54,8 @@ graph LR
 
 ### 1️⃣ Clone & Navigate
 ```bash
-git clone https://github.com/yourusername/media-server.git
-cd media-server
+git clone https://github.com/yourusername/home_server.git /data/code/home_server
+cd /data/code/home_server/services/media
 ```
 
 ### 2️⃣ Configure Environment
@@ -74,19 +74,18 @@ ADMIN_USERNAME=admin
 ADMIN_PASSWORD=admin123
 ```
 
-### 3️⃣ Create Folder Structure
+### 3️⃣ Create Folder Structure on Host
 ```bash
-# Run this command to create all required folders
-mkdir -p data/{downloads,media/{movies,tv}} \
-         config jellyseerr \
-         jellystat/{postgres,backup-data} \
-         rdtclient/config \
-         prowlarr radarr sonarr
+# Create required folders on your server
+sudo mkdir -p /data/downloads \
+              /data/media/{movies,movies-tamil,tv}
 ```
+
+Note: Config directories will be created automatically when containers start.
 
 ### 4️⃣ Start Everything
 ```bash
-docker-compose up -d
+docker compose up -d
 ```
 
 ### 5️⃣ Access Your Services
@@ -99,15 +98,11 @@ Wait 2-3 minutes for services to initialize, then:
 ## 📁 Folder Structure
 
 ```
-media_server/
-├── 📄 docker-compose.yml    # Main configuration
+/data/code/home_server/services/media/
+├── 📄 compose.yml           # Main configuration
 ├── 📄 .env                  # Your API keys and settings
 ├── 📄 .env.example          # Template for .env
-├── 📁 data/
-│   ├── 📁 downloads/        # Temporary downloads from AllDebrid
-│   └── 📁 media/
-│       ├── 📁 movies/       # Your movie library
-│       └── 📁 tv/           # Your TV show library
+├── 📄 readme.md             # This file
 ├── 📁 config/               # Jellyfin configuration
 ├── 📁 rdtclient/            # RDTClient database
 ├── 📁 radarr/               # Radarr configuration
@@ -115,6 +110,13 @@ media_server/
 ├── 📁 prowlarr/             # Prowlarr configuration
 ├── 📁 jellyseerr/           # Jellyseerr configuration
 └── 📁 jellystat/            # Statistics database
+
+/data/ (outside repo)
+├── 📁 downloads/            # Temporary downloads from AllDebrid
+└── 📁 media/
+    ├── 📁 movies/           # Your movie library
+    ├── 📁 movies-tamil/     # Tamil movies
+    └── 📁 tv/               # Your TV show library
 ```
 
 ## ⚙️ Initial Configuration

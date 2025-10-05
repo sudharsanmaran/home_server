@@ -8,7 +8,7 @@ services:
       - TZ=${TZ}
       - JELLYFIN_PublishedServerUrl=${JELLYFIN_PUBLISHED_URL}
     volumes:
-      - /data/code/media-server/config:/config
+      - /data/code/home_server/services/media/config:/config
       - /data/media:/data/media
     ports:
       - 8096:8096
@@ -24,7 +24,7 @@ services:
       - PGID=${PGID}
       - TZ=${TZ}
     volumes:
-      - /data/code/media-server/rdtclient/config:/data/db
+      - /data/code/home_server/services/media/rdtclient/config:/data/db
       - /data/downloads:/data/downloads
     ports:
       - 6500:6500
@@ -40,7 +40,7 @@ services:
       - RADARR__AUTH__METHOD=External
       - RADARR__AUTH__REQUIRED=DisabledForLocalAddresses
     volumes:
-      - /data/code/media-server/radarr:/config
+      - /data/code/home_server/services/media/radarr:/config
       - /data/downloads:/downloads
       - /data/media/movies:/movies
       - /data/media/movies-tamil:/movies-tamil
@@ -58,7 +58,7 @@ services:
       - SONARR__AUTH__METHOD=External
       - SONARR__AUTH__REQUIRED=DisabledForLocalAddresses
     volumes:
-      - /data/code/media-server/sonarr:/config
+      - /data/code/home_server/services/media/sonarr:/config
       - /data/downloads:/downloads
       - /data/media/tv:/tv
     ports:
@@ -93,7 +93,7 @@ services:
       - PGID=${PGID}
       - TZ=${TZ}
     volumes:
-      - /data/code/media-server/prowlarr:/config
+      - /data/code/home_server/services/media/prowlarr:/config
     depends_on:
       - vpn
     restart: unless-stopped
@@ -107,7 +107,7 @@ services:
       - PGID=${PGID}
       - TZ=${TZ}
     volumes:
-      - /data/code/media-server/jellyseerr:/app/config
+      - /data/code/home_server/services/media/jellyseerr:/app/config
     ports:
       - 5055:5055
     restart: unless-stopped
@@ -122,7 +122,7 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: mypassword
     volumes:
-      - /data/code/media-server/jellystat/postgres:/var/lib/postgresql/data
+      - /data/code/home_server/services/media/jellystat/postgres:/var/lib/postgresql/data
     profiles:
       - optional
 
@@ -138,7 +138,7 @@ services:
       JWT_SECRET: "my-secret-jwt-key"
       TZ: ${TZ}
     volumes:
-      - /data/code/media-server/jellystat/backup-data:/app/backend/backup-data
+      - /data/code/home_server/services/media/jellystat/backup-data:/app/backend/backup-data
     ports:
       - "3000:3000"
     depends_on:
