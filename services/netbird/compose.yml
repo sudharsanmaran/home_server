@@ -1,0 +1,87 @@
+services:
+  # Management service - API and control plane
+  management:
+    image: netbirdio/management:latest
+    container_name: netbird-management
+    restart: unless-stopped
+    volumes:
+      - /data/code/home_server/services/netbird/management:/var/lib/netbird
+      - /data/code/home_server/services/netbird/management.json:/etc/netbird/management.json
+    environment:
+      - NETBIRD_MGMT_API_PORT=443
+      - NETBIRD_MGMT_SIGNAL_PROTOCOL=https
+      - NETBIRD_MGMT_SIGNAL_PORT=443
+      - NETBIRD_MGMT_SIGNAL_ENDPOINT=${NETBIRD_SIGNAL_DOMAIN}:443
+      - NETBIRD_MGMT_TURN_DOMAIN=${NETBIRD_TURN_DOMAIN}
+      - NETBIRD_MGMT_TURN_PORT=3478
+      - NETBIRD_MGMT_TURN_USERNAME=${TURN_USERNAME}
+      - NETBIRD_MGMT_TURN_PASSWORD=${TURN_PASSWORD}
+      - NETBIRD_MGMT_IDP=none
+    command:
+      - "--port=443"
+      - "--log-level=info"
+      - "--disable-anonymous-metrics=false"
+      - "--single-account-mode-domain=${NETBIRD_DOMAIN}"
+      - "--dns-domain=${NETBIRD_DOMAIN}"
+    networks:
+      - home_server_network
+    depends_on:
+      - signal
+
+  # Signal service - WebRTC signaling
+  signal:
+    image: netbirdio/signal:latest
+    container_name: netbird-signal
+    restart: unless-stopped
+    volumes:
+      - /data/code/home_server/services/netbird/signal:/var/lib/netbird
+    environment:
+      - NETBIRD_SIGNAL_PORT=443
+      - NETBIRD_SIGNAL_PROTOCOL=https
+    command:
+      - "--port=443"
+      - "--log-level=info"
+    networks:
+      - home_server_network
+
+  # Dashboard - Web UI
+  dashboard:
+    image: netbirdio/dashboard:latest
+    container_name: netbird-dashboard
+    restart: unless-stopped
+    environment:
+      - NETBIRD_MGMT_API_ENDPOINT=https://${NETBIRD_API_DOMAIN}
+      - NETBIRD_MGMT_GRPC_API_ENDPOINT=https://${NETBIRD_API_DOMAIN}
+      - USE_AUTH0=false
+      - AUTH_AUDIENCE=netbird
+      - AUTH_CLIENT_ID=netbird-client
+      - AUTH_AUTHORITY=https://${NETBIRD_DOMAIN}
+      - NETBIRD_TOKEN_SOURCE=accessToken
+    networks:
+      - home_server_network
+    depends_on:
+      - management
+
+  # Coturn - TURN/STUN server for NAT traversal
+  coturn:
+    image: coturn/coturn:latest
+    container_name: netbird-coturn
+    restart: unless-stopped
+    domainname: ${NETBIRD_TURN_DOMAIN}
+    volumes:
+      - /data/code/home_server/services/netbird/turnserver.conf:/etc/coturn/turnserver.conf
+    ports:
+      # STUN/TURN ports
+      - "3478:3478/udp"
+      - "3478:3478/tcp"
+      # TURN relay ports range
+      - "49152-65535:49152-65535/udp"
+    command:
+      - "-c"
+      - "/etc/coturn/turnserver.conf"
+    networks:
+      - home_server_network
+
+networks:
+  home_server_network:
+    external: true
