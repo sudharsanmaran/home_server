@@ -1,0 +1,147 @@
+services:
+  jellyfin:
+    image: lscr.io/linuxserver/jellyfin:latest
+    container_name: jellyfin
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+      - JELLYFIN_PublishedServerUrl=${JELLYFIN_PUBLISHED_URL}
+    volumes:
+      - /data/code/media-server/config:/config
+      - /data/media:/data/media
+    ports:
+      - 8096:8096
+      - 7359:7359/udp
+      - 1900:1900/udp
+    restart: unless-stopped
+
+  rdtclient:
+    image: rogerfar/rdtclient:latest
+    container_name: rdtclient
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    volumes:
+      - /data/code/media-server/rdtclient/config:/data/db
+      - /data/downloads:/data/downloads
+    ports:
+      - 6500:6500
+    restart: unless-stopped
+
+  radarr:
+    image: lscr.io/linuxserver/radarr:latest
+    container_name: radarr
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+      - RADARR__AUTH__METHOD=External
+      - RADARR__AUTH__REQUIRED=DisabledForLocalAddresses
+    volumes:
+      - /data/code/media-server/radarr:/config
+      - /data/downloads:/downloads
+      - /data/media/movies:/movies
+      - /data/media/movies-tamil:/movies-tamil
+    ports:
+      - 7878:7878
+    restart: unless-stopped
+
+  sonarr:
+    image: lscr.io/linuxserver/sonarr:latest
+    container_name: sonarr
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+      - SONARR__AUTH__METHOD=External
+      - SONARR__AUTH__REQUIRED=DisabledForLocalAddresses
+    volumes:
+      - /data/code/media-server/sonarr:/config
+      - /data/downloads:/downloads
+      - /data/media/tv:/tv
+    ports:
+      - 8989:8989
+    restart: unless-stopped
+
+  vpn:
+    image: qmcgaw/gluetun:latest
+    container_name: vpn
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    ports:
+      - 9696:9696  # Prowlarr
+    environment:
+      - DOT=off
+      - VPN_SERVICE_PROVIDER=surfshark
+      - VPN_TYPE=wireguard
+      - WIREGUARD_PRIVATE_KEY=${SURFSHARK_PRIVATE_KEY}
+      - WIREGUARD_ADDRESSES=${SURFSHARK_ADDRESSES}
+      - SERVER_COUNTRIES=${VPN_COUNTRY}
+      - TZ=${TZ}
+    restart: unless-stopped
+
+  prowlarr:
+    image: lscr.io/linuxserver/prowlarr:latest
+    container_name: prowlarr
+    network_mode: "service:vpn"
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    volumes:
+      - /data/code/media-server/prowlarr:/config
+    depends_on:
+      - vpn
+    restart: unless-stopped
+
+  # Optional - only start if you have spare RAM
+  jellyseerr:
+    container_name: jellyseerr
+    image: fallenbagel/jellyseerr:latest
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    volumes:
+      - /data/code/media-server/jellyseerr:/app/config
+    ports:
+      - 5055:5055
+    restart: unless-stopped
+    profiles:
+      - optional
+
+  jellystat-db:
+    image: postgres:15.2
+    container_name: jellystat-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: mypassword
+    volumes:
+      - /data/code/media-server/jellystat/postgres:/var/lib/postgresql/data
+    profiles:
+      - optional
+
+  jellystat:
+    image: cyfershepard/jellystat:latest
+    container_name: jellystat
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: mypassword
+      POSTGRES_IP: jellystat-db
+      POSTGRES_PORT: 5432
+      JWT_SECRET: "my-secret-jwt-key"
+      TZ: ${TZ}
+    volumes:
+      - /data/code/media-server/jellystat/backup-data:/app/backend/backup-data
+    ports:
+      - "3000:3000"
+    depends_on:
+      - jellystat-db
+    profiles:
+      - optional
