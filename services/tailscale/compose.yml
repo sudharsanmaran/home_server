@@ -1,0 +1,27 @@
+services:
+  tailscale:
+    image: tailscale/tailscale:latest
+    container_name: tailscale
+    restart: unless-stopped
+    hostname: home-server
+    # Use host network to access all services on the host
+    network_mode: host
+    cap_add:
+      - NET_ADMIN
+      - SYS_MODULE
+    volumes:
+      # Persistent state directory
+      - /data/code/home_server/services/tailscale/state:/var/lib/tailscale
+      # Access to /dev/net/tun
+      - /dev/net/tun:/dev/net/tun
+    environment:
+      # Set to your Tailscale auth key (get from https://login.tailscale.com/admin/settings/keys)
+      # Or leave empty and run: docker exec tailscale tailscale up
+      - TS_AUTHKEY=${TS_AUTHKEY:-}
+      # Accept routes advertised by other nodes
+      - TS_ACCEPT_ROUTES=true
+      # Optionally advertise this node as an exit node
+      # - TS_EXTRA_ARGS=--advertise-exit-node
+      # Enable SSH access through Tailscale
+      - TS_SSH=true
+    command: tailscaled
