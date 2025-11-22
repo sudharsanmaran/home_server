@@ -1,0 +1,15 @@
+# Rclone configuration for AllDebrid WebDAV
+#
+# To set up:
+# 1. Get your API key from https://alldebrid.com/apikeys/
+# 2. Copy this file to rclone.conf
+# 3. Replace YOUR_ALLDEBRID_API_KEY with your actual API key
+# 4. Generate an obscured password: rclone obscure YOUR_API_KEY
+# 5. Replace YOUR_OBSCURED_PASSWORD with the output
+
+[alldebrid]
+type = webdav
+url = https://webdav.debrid.it/
+vendor = other
+user = YOUR_ALLDEBRID_API_KEY
+pass = YOUR_OBSCURED_PASSWORD

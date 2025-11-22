@@ -38,9 +38,11 @@ docker exec tailscale tailscale ip -4
 ```
 
 ### Access your services:
-Once connected to Tailscale, you can access:
-- Nginx Proxy Manager: `http://<tailscale-ip>:81`
-- Other services on your home server using the Tailscale IP
+Once connected to Tailscale, you can access all services using the Tailscale IP:
+- Jellyfin: `http://<tailscale-ip>:8096`
+- Immich: `http://<tailscale-ip>:2283`
+- Radarr: `http://<tailscale-ip>:7878`
+- Other services on your home server
 
 ### Enable exit node (optional):
 To use your home server as an exit node:
