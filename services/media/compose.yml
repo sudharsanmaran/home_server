@@ -1,6 +1,9 @@
 services:
+  # ===================
+  # Media Server
+  # ===================
   jellyfin:
-    image: lscr.io/linuxserver/jellyfin:latest
+    image: lscr.io/linuxserver/jellyfin:10.10.7
     container_name: jellyfin
     environment:
       - PUID=${PUID}
@@ -11,7 +14,7 @@ services:
     devices:
       - /dev/dri:/dev/dri
     volumes:
-      - /data/code/home_server/services/media/config:/config
+      - ./jellyfin:/config
       - /storage/media:/data/media
       - type: bind
         source: /data/alldebrid
@@ -19,115 +22,18 @@ services:
         bind:
           propagation: rshared
       - /data/symlinks:/data/symlinks
-      - /data/code/home_server/services/media/jellyfin-cache:/config/cache
     ports:
       - 8096:8096
       - 7359:7359/udp
       - 1900:1900/udp
     restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8096/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 60s
-    stop_grace_period: 30s
     depends_on:
       rclone:
         condition: service_started
 
-  jellyfin-test:
-    image: lscr.io/linuxserver/jellyfin:10.10.0
-    container_name: jellyfin-test
-    environment:
-      - PUID=${PUID}
-      - PGID=${PGID}
-      - TZ=${TZ}
-      - JELLYFIN_PublishedServerUrl=${JELLYFIN_PUBLISHED_URL}:8097
-      - JELLYFIN_CACHE_DIR=/config/cache
-    devices:
-      - /dev/dri:/dev/dri
-    volumes:
-      - /data/code/home_server/services/media/config-test:/config
-      - /storage/media:/data/media
-      - type: bind
-        source: /data/alldebrid
-        target: /data/alldebrid
-        bind:
-          propagation: rshared
-      - /data/symlinks:/data/symlinks
-    ports:
-      - 8097:8096
-    restart: unless-stopped
-    depends_on:
-      rclone:
-        condition: service_started
-
-  aria2:
-    image: p3terx/aria2-pro:latest
-    container_name: aria2
-    restart: unless-stopped
-    environment:
-      - PUID=${PUID}
-      - PGID=${PGID}
-      - TZ=${TZ}
-      - RPC_SECRET=${ARIA2_RPC_SECRET}
-      - RPC_PORT=6800
-      - LISTEN_PORT=6888
-      - DISK_CACHE=64M
-      - IPV6_MODE=false
-      - UPDATE_TRACKERS=true
-      - CUSTOM_TRACKER_URL=
-      - UMASK_SET=022
-    volumes:
-      - /data/code/home_server/services/media/aria2/config:/config
-      - /data/downloads:/data/downloads
-    ports:
-      - 6800:6800
-      - 6888:6888
-      - 6888:6888/udp
-    logging:
-      driver: json-file
-      options:
-        max-size: 1m
-
-  rdtclient:
-    image: rogerfar/rdtclient:latest
-    container_name: rdtclient
-    environment:
-      - PUID=${PUID}
-      - PGID=${PGID}
-      - TZ=${TZ}
-    volumes:
-      - /data/code/home_server/services/media/rdtclient/config:/data/db
-      - /data/downloads:/data/downloads
-    ports:
-      - 6500:6500
-    restart: unless-stopped
-    depends_on:
-      - aria2
-
-  rdtclient-symlink:
-    image: rogerfar/rdtclient:latest
-    container_name: rdtclient-symlink
-    environment:
-      - PUID=${PUID}
-      - PGID=${PGID}
-      - TZ=${TZ}
-    volumes:
-      - /data/code/home_server/services/media/rdtclient-symlink/config:/data/db
-      - type: bind
-        source: /data/alldebrid
-        target: /data/alldebrid
-        bind:
-          propagation: rshared
-      - /data/symlinks:/data/symlinks
-    ports:
-      - 6501:6500
-    restart: unless-stopped
-    depends_on:
-      - rclone
-
+  # ===================
+  # Media Management
+  # ===================
   radarr:
     image: lscr.io/linuxserver/radarr:latest
     container_name: radarr
@@ -138,8 +44,7 @@ services:
       - RADARR__AUTH__METHOD=External
       - RADARR__AUTH__REQUIRED=DisabledForLocalAddresses
     volumes:
-      - /data/code/home_server/services/media/radarr:/config
-      - /data/downloads:/downloads
+      - ./radarr:/config
       - /storage/media/movies:/movies
       - /storage/media/movies-tamil:/movies-tamil
       - type: bind
@@ -148,8 +53,6 @@ services:
         bind:
           propagation: rshared
       - /data/symlinks:/data/symlinks
-      - /data/code/home_server/scripts/media-conversion:/scripts:ro
-      - /var/run/docker.sock:/var/run/docker.sock
     ports:
       - 7878:7878
     restart: unless-stopped
@@ -167,12 +70,11 @@ services:
       - SONARR__AUTH__METHOD=External
       - SONARR__AUTH__REQUIRED=DisabledForLocalAddresses
     volumes:
-      - /data/code/home_server/services/media/sonarr:/config
-      - /data/downloads:/downloads
+      - ./sonarr:/config
       - /storage/media/tv:/tv
       - type: bind
         source: /data/alldebrid
-        target: /alldebrid-cloud
+        target: /data/alldebrid
         bind:
           propagation: rshared
       - /data/symlinks:/data/symlinks
@@ -183,102 +85,50 @@ services:
       rclone:
         condition: service_started
 
-  vpn:
-    image: qmcgaw/gluetun:latest
-    container_name: vpn
-    cap_add:
-      - NET_ADMIN
-    devices:
-      - /dev/net/tun:/dev/net/tun
-    ports:
-      - 9696:9696  # Prowlarr
-    environment:
-      - DOT=off
-      - VPN_SERVICE_PROVIDER=surfshark
-      - VPN_TYPE=wireguard
-      - WIREGUARD_PRIVATE_KEY=${SURFSHARK_PRIVATE_KEY}
-      - WIREGUARD_ADDRESSES=${SURFSHARK_ADDRESSES}
-      - SERVER_COUNTRIES=${VPN_COUNTRY}
-      - TZ=${TZ}
-    restart: unless-stopped
-
-  prowlarr:
-    image: lscr.io/linuxserver/prowlarr:latest
-    container_name: prowlarr
-    network_mode: "service:vpn"
-    environment:
-      - PUID=${PUID}
-      - PGID=${PGID}
-      - TZ=${TZ}
-    volumes:
-      - /data/code/home_server/services/media/prowlarr:/config
-    depends_on:
-      - vpn
-    restart: unless-stopped
-
+  # ===================
+  # Request Management
+  # ===================
   jellyseerr:
-    container_name: jellyseerr
     image: fallenbagel/jellyseerr:latest
+    container_name: jellyseerr
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TZ}
     volumes:
-      - /data/code/home_server/services/media/jellyseerr:/app/config
+      - ./jellyseerr:/app/config
     ports:
       - 5055:5055
     restart: unless-stopped
 
-  jellystat-db:
-    image: postgres:15.2
-    container_name: jellystat-db
-    restart: unless-stopped
-    environment:
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-    volumes:
-      - /data/code/home_server/services/media/jellystat/postgres:/var/lib/postgresql/data
-
-  jellystat:
-    image: cyfershepard/jellystat:latest
-    container_name: jellystat
-    restart: unless-stopped
-    environment:
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_IP: jellystat-db
-      POSTGRES_PORT: 5432
-      JWT_SECRET: ${JWT_SECRET}
-      TZ: ${TZ}
-    volumes:
-      - /data/code/home_server/services/media/jellystat/backup-data:/app/backend/backup-data
-    ports:
-      - "3000:3000"
-    depends_on:
-      - jellystat-db
-
-  media-converter:
-    build: /data/code/home_server/scripts/media-conversion
-    container_name: media-converter
-    restart: unless-stopped
+  # ===================
+  # Download Client (AllDebrid + Symlinks)
+  # ===================
+  rdtclient:
+    image: rogerfar/rdtclient:latest
+    container_name: rdtclient
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TZ}
-      - RADARR_URL=http://radarr:7878
-      - RADARR_API_KEY=${RADARR_API_KEY}
-      - JELLYFIN_URL=http://jellyfin:8096
     volumes:
-      # Scripts directory (for live updates)
-      - /data/code/home_server/scripts/media-conversion:/app
-      # Media directories (same as Radarr)
-      - /storage/media:/data/media
-      # Logs and database
-      - /data/code/home_server/services/media/media-converter/logs:/var/log/conversions
+      - ./rdtclient:/data/db
+      - type: bind
+        source: /data/alldebrid
+        target: /data/alldebrid
+        bind:
+          propagation: rshared
+      - /data/symlinks:/data/symlinks
+    ports:
+      - 6500:6500
+    restart: unless-stopped
     depends_on:
-      - radarr
-      - jellyfin
+      rclone:
+        condition: service_started
 
+  # ===================
+  # Cloud Storage Mount
+  # ===================
   rclone:
     image: rclone/rclone:latest
     container_name: rclone
@@ -288,7 +138,7 @@ services:
       - PGID=${PGID}
       - TZ=${TZ}
     volumes:
-      - /data/code/home_server/services/media/rclone/rclone.conf:/config/rclone/rclone.conf
+      - ./rclone/rclone.conf:/config/rclone/rclone.conf
       - /data/alldebrid:/data:rshared
       - /data/cache/rclone:/cache
     devices:
@@ -298,7 +148,7 @@ services:
     security_opt:
       - apparmor:unconfined
     command: >
-      mount alldebrid:
+      mount alldebrid-union:
       /data
       --config=/config/rclone/rclone.conf
       --allow-other
@@ -316,3 +166,149 @@ services:
       --buffer-size=128M
       --cache-dir=/cache
       --log-level=INFO
+
+  # ===================
+  # Indexer Management (VPN Protected)
+  # ===================
+  vpn:
+    image: qmcgaw/gluetun:latest
+    container_name: vpn
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    ports:
+      - 9696:9696  # Prowlarr
+      - 8191:8191  # FlareSolverr
+    sysctls:
+      - net.ipv6.conf.all.disable_ipv6=1
+    environment:
+      - DOT=off
+      - DOT_CACHING=off
+      - BLOCK_MALICIOUS=off
+      - DNS_ADDRESS=1.1.1.1
+      - VPN_SERVICE_PROVIDER=surfshark
+      - VPN_TYPE=wireguard
+      - WIREGUARD_PRIVATE_KEY=${SURFSHARK_PRIVATE_KEY}
+      - WIREGUARD_ADDRESSES=${SURFSHARK_ADDRESSES}
+      - SERVER_COUNTRIES=${VPN_COUNTRY}
+      - TZ=${TZ}
+    restart: unless-stopped
+
+  prowlarr:
+    image: lscr.io/linuxserver/prowlarr:latest
+    container_name: prowlarr
+    network_mode: "service:vpn"
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    volumes:
+      - ./prowlarr:/config
+    depends_on:
+      - vpn
+    restart: unless-stopped
+
+  flaresolverr:
+    image: ghcr.io/flaresolverr/flaresolverr:latest
+    container_name: flaresolverr
+    network_mode: "service:vpn"
+    environment:
+      - LOG_LEVEL=info
+      - TZ=${TZ}
+    depends_on:
+      - vpn
+    restart: unless-stopped
+
+  # ===================
+  # Statistics & Monitoring
+  # ===================
+  jellystat-db:
+    image: postgres:15.2
+    container_name: jellystat-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - ./jellystat/postgres:/var/lib/postgresql/data
+
+  jellystat:
+    image: cyfershepard/jellystat:latest
+    container_name: jellystat
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_IP: jellystat-db
+      POSTGRES_PORT: 5432
+      JWT_SECRET: ${JWT_SECRET}
+      TZ: ${TZ}
+    volumes:
+      - ./jellystat/backup-data:/app/backend/backup-data
+    ports:
+      - 3000:3000
+    depends_on:
+      - jellystat-db
+
+  # ===================
+  # Automation & Maintenance
+  # ===================
+  profilarr:
+    image: santiagosayshey/profilarr:latest
+    container_name: profilarr
+    ports:
+      - 6868:6868
+    volumes:
+      - ./profilarr:/config
+    environment:
+      - TZ=${TZ}
+      - PROFILARR_PAT=${GITHUB_PAT}
+    restart: unless-stopped
+
+  cleanuparr:
+    image: ghcr.io/cleanuparr/cleanuparr:latest
+    container_name: cleanuparr
+    ports:
+      - 11011:11011
+    volumes:
+      - ./cleanuparr:/config
+    environment:
+      - TZ=${TZ}
+      - PUID=${PUID}
+      - PGID=${PGID}
+    restart: unless-stopped
+
+  huntarr:
+    image: huntarr/huntarr:latest
+    container_name: huntarr
+    ports:
+      - 9705:9705
+    volumes:
+      - ./huntarr:/config
+    environment:
+      - TZ=${TZ}
+    restart: unless-stopped
+
+  bazarr:
+    image: lscr.io/linuxserver/bazarr:latest
+    container_name: bazarr
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    volumes:
+      - ./bazarr:/config
+      - /storage/media:/data/media
+      - type: bind
+        source: /data/alldebrid
+        target: /data/alldebrid
+        bind:
+          propagation: rshared
+      - /data/symlinks:/data/symlinks
+    ports:
+      - 6767:6767
+    restart: unless-stopped
+    depends_on:
+      rclone:
+        condition: service_started

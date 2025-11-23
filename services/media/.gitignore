@@ -17,14 +17,18 @@ data/
 *.mpeg
 *.3gp
 
-# Configuration and database files
-config/
+# Configuration and database files (service data - not code)
+jellyfin/
 jellyseerr/
 jellystat/
 rdtclient/
 prowlarr/
 radarr/
 sonarr/
+profilarr/
+cleanuparr/
+huntarr/
+bazarr/
 
 # Logs
 *.log

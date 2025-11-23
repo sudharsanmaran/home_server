@@ -15,7 +15,11 @@ services/**/sonarr/
 services/**/jellyseerr/
 services/**/jellystat/
 services/**/rdtclient/
-services/**/rdtclient-symlink/
+services/**/jellyfin/
+services/**/aria2/
+
+# Management service data
+services/management/portainer-data/
 
 # Rclone configuration (contains API keys)
 services/media/rclone/rclone.conf
@@ -27,11 +31,8 @@ services/immich/postgres/
 services/immich/redis/
 services/immich/machine-learning/
 
-# Jellyfin cache and media service data
-services/media/jellyfin-cache/
-services/media/aria2/
+# Media service data folders
 services/media/media-converter/
-services/media/config-test/
 
 # OS files
 .DS_Store

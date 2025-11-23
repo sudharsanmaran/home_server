@@ -1,5 +1,16 @@
 # Media Stack Setup
 
+## TODO
+
+- [ ] **Jellyseerr search filtering** - No language/region filtering available. Tamil movies get buried under irrelevant results. Searching by year or IMDB ID doesn't help.
+- [ ] **Radarr language profiles** - Configure profiles for:
+  - Tamil dubbed Hollywood movies
+  - English dubbed foreign movies
+- [ ] **Google Photos migration** - Migrate photos to self-hosted solution (Immich)
+- [ ] **Immich backup to HDD** - Set up backup of Immich data to external HDD for safety
+
+---
+
 ## Services
 
 **aria2** - Reliable downloads with auto-resume (solves 12GB+ timeout issues)
@@ -85,6 +96,12 @@ docker ps | grep -E "aria2|radarr"   # Check services
 ```
 
 ## Troubleshooting
+
+See [TROUBLESHOOTING.md](./TROUBLESHOOTING.md) for comprehensive solutions to common issues including:
+- RDTClient mount path and download issues
+- Rclone FUSE mount problems
+- Jellyfin/Infuse compatibility
+- Broken symlinks after mount changes
 
 **Downloads timing out?**
 - Check RDTClient is using aria2

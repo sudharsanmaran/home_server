@@ -37,8 +37,7 @@ echo "📦 Restarting dependent services..."
 # Restart all services that depend on the rclone mount
 docker compose restart \
     jellyfin \
-    jellyfin-test \
-    rdtclient-symlink \
+    rdtclient \
     radarr \
     sonarr
 
@@ -48,8 +47,7 @@ echo ""
 echo "Services restarted:"
 echo "  - rclone (FUSE mount for AllDebrid)"
 echo "  - jellyfin (media server)"
-echo "  - jellyfin-test (test instance)"
-echo "  - rdtclient-symlink (symlink creator)"
+echo "  - rdtclient (download client)"
 echo "  - radarr (movie management)"
 echo "  - sonarr (TV show management)"
 echo ""
