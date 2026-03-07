@@ -59,3 +59,12 @@ __pycache__/
 
 # Tailscale state (contains auth tokens)
 services/tailscale/state/
+
+# Audiobookshelf runtime data (DB, migrations - app-managed)
+services/media/audiobookshelf/
+
+# Shelfmark runtime data (covers, plugin configs with API keys)
+services/media/shelfmark/
+
+# AdGuard Home config (contains DNS settings, users)
+services/dns/adguard/
