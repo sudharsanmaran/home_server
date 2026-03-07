@@ -11,7 +11,7 @@ services:
       - SYS_MODULE
     volumes:
       # Persistent state directory
-      - /data/code/home_server/services/tailscale/state:/var/lib/tailscale
+      - ./state:/var/lib/tailscale
       # Access to /dev/net/tun
       - /dev/net/tun:/dev/net/tun
     environment:
@@ -20,8 +20,8 @@ services:
       - TS_AUTHKEY=${TS_AUTHKEY:-}
       # Accept routes advertised by other nodes
       - TS_ACCEPT_ROUTES=true
-      # Optionally advertise this node as an exit node
-      # - TS_EXTRA_ARGS=--advertise-exit-node
+      # Advertise this node as an exit node for remote DNS filtering
+      - TS_EXTRA_ARGS=--advertise-exit-node --accept-dns=false
       # Enable SSH access through Tailscale
       - TS_SSH=true
     command: tailscaled
