@@ -1,5 +1,29 @@
 # Media Stack Setup
 
+## Services Overview
+
+| Service | Port | Description |
+|---------|------|-------------|
+| Jellyfin | 8096 | Media server with hardware transcoding |
+| Radarr | 7878 | Movie management and automation |
+| Sonarr | 8989 | TV series management and automation |
+| Bazarr | 6767 | Subtitle management for Radarr/Sonarr |
+| Prowlarr | 9696 | Indexer manager (VPN-protected) |
+| Jellyseerr | 5055 | Media request management |
+| Seerr | 5056 | Media request management (alternative) |
+| RDTClient | 6500 | Real-Debrid / AllDebrid download client |
+| Jellystat | 3000 | Jellyfin playback statistics |
+| Shelfmark | 8084 | Ebook and audiobook downloads (VPN-protected) |
+| Audiobookshelf | 13378 | Audiobook and podcast server |
+| Profilarr | 6868 | Quality profile sync for Radarr/Sonarr |
+| Cleanuparr | 11011 | Automated media library cleanup |
+| Huntarr | 9705 | Missing media search automation |
+| FlareSolverr | 8191 | Cloudflare challenge solver (VPN-protected) |
+| Rclone | -- | Cloud storage (AllDebrid) FUSE mount |
+| VPN (Gluetun) | -- | WireGuard VPN for Prowlarr, FlareSolverr, Shelfmark |
+
+---
+
 ## TODO
 
 - [ ] **Jellyseerr search filtering** - No language/region filtering available. Tamil movies get buried under irrelevant results. Searching by year or IMDB ID doesn't help.
