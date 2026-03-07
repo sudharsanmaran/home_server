@@ -37,13 +37,3 @@ services:
       - ./caddy/config:/config
     environment:
       - TZ=${TZ:-UTC}
-
-  dnsmasq:
-    image: andyshinn/dnsmasq:latest
-    container_name: dnsmasq
-    restart: always
-    network_mode: host
-    volumes:
-      - ./dnsmasq/dnsmasq.conf:/etc/dnsmasq.conf:ro
-    cap_add:
-      - NET_ADMIN
