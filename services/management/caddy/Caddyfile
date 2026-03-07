@@ -52,6 +52,11 @@ http://immich.home-server {
     reverse_proxy localhost:2283
 }
 
+# AdGuard Home
+http://adguard.home-server {
+    reverse_proxy localhost:3001
+}
+
 # Books & Audiobooks
 http://shelfmark.home-server {
     reverse_proxy localhost:8084

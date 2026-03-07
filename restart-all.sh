@@ -9,8 +9,8 @@ set -e
 
 SERVICES_DIR="/data/code/home_server/services"
 
-# Order matters: tailscale first (networking), then management, then media, then immich
-STACKS=(tailscale management media immich)
+# Order matters: tailscale first (networking), then dns, then management, then media, then immich
+STACKS=(tailscale dns management media immich)
 
 echo "=== Home Server Recovery ==="
 
