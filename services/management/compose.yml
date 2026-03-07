@@ -2,10 +2,10 @@ services:
   portainer:
     image: portainer/portainer-ce:latest
     container_name: portainer
-    restart: unless-stopped
+    restart: always
     ports:
-      - "9000:9000"   # HTTP
-      - "9443:9443"   # HTTPS
+      - "9000:9000"
+      - "9443:9443"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - ./portainer-data:/data
@@ -15,13 +15,35 @@ services:
   glances:
     image: nicolargo/glances:latest-full
     container_name: glances
-    restart: unless-stopped
+    restart: always
     pid: host
     ports:
-      - "29999:61208"  # Web UI
+      - "29999:61208"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - /etc/os-release:/etc/os-release:ro
     environment:
       - TZ=${TZ:-UTC}
-      - GLANCES_OPT=-w  # Web server mode
+      - GLANCES_OPT=-w
+
+  caddy:
+    image: caddy:latest
+    container_name: caddy
+    restart: always
+    network_mode: host
+    volumes:
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./caddy/data:/data
+      - ./caddy/config:/config
+    environment:
+      - TZ=${TZ:-UTC}
+
+  dnsmasq:
+    image: andyshinn/dnsmasq:latest
+    container_name: dnsmasq
+    restart: always
+    network_mode: host
+    volumes:
+      - ./dnsmasq/dnsmasq.conf:/etc/dnsmasq.conf:ro
+    cap_add:
+      - NET_ADMIN

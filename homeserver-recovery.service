@@ -1,0 +1,14 @@
+[Unit]
+Description=Home Server Docker Compose Recovery
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/data/code/home_server/restart-all.sh
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

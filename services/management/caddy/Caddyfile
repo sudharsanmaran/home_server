@@ -1,0 +1,62 @@
+{
+    auto_https off
+}
+
+# Jellyfin
+http://jellyfin.home-server {
+    reverse_proxy localhost:8096
+}
+
+# Media Management
+http://radarr.home-server {
+    reverse_proxy localhost:7878
+}
+
+http://sonarr.home-server {
+    reverse_proxy localhost:8989
+}
+
+http://prowlarr.home-server {
+    reverse_proxy localhost:9696
+}
+
+http://bazarr.home-server {
+    reverse_proxy localhost:6767
+}
+
+# Request Management
+http://seerr.home-server {
+    reverse_proxy localhost:5056
+}
+
+# Download Client
+http://rdtclient.home-server {
+    reverse_proxy localhost:6500
+}
+
+# Stats & Management
+http://jellystat.home-server {
+    reverse_proxy localhost:3000
+}
+
+http://portainer.home-server {
+    reverse_proxy localhost:9000
+}
+
+http://glances.home-server {
+    reverse_proxy localhost:29999
+}
+
+# Immich
+http://immich.home-server {
+    reverse_proxy localhost:2283
+}
+
+# Books & Audiobooks
+http://shelfmark.home-server {
+    reverse_proxy localhost:8084
+}
+
+http://audiobookshelf.home-server {
+    reverse_proxy localhost:13378
+}

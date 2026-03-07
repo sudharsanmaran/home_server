@@ -26,7 +26,7 @@ services:
       - 8096:8096
       - 7359:7359/udp
       - 1900:1900/udp
-    restart: unless-stopped
+    restart: always
     depends_on:
       rclone:
         condition: service_started
@@ -55,7 +55,7 @@ services:
       - /data/symlinks:/data/symlinks
     ports:
       - 7878:7878
-    restart: unless-stopped
+    restart: always
     depends_on:
       rclone:
         condition: service_started
@@ -80,7 +80,7 @@ services:
       - /data/symlinks:/data/symlinks
     ports:
       - 8989:8989
-    restart: unless-stopped
+    restart: always
     depends_on:
       rclone:
         condition: service_started
@@ -99,10 +99,10 @@ services:
       - ./jellyseerr:/app/config
     ports:
       - 5055:5055
-    restart: unless-stopped
+    restart: always
 
   seerr:
-    image: ghcr.io/seerr-team/seerr:sha-b66b361
+    image: ghcr.io/seerr-team/seerr:develop
     container_name: seerr
     environment:
       - PUID=${PUID}
@@ -112,7 +112,7 @@ services:
       - ./seerr:/app/config
     ports:
       - 5056:5055
-    restart: unless-stopped
+    restart: always
 
   # ===================
   # Download Client (AllDebrid + Symlinks)
@@ -134,7 +134,7 @@ services:
       - /data/symlinks:/data/symlinks
     ports:
       - 6500:6500
-    restart: unless-stopped
+    restart: always
     depends_on:
       rclone:
         condition: service_started
@@ -145,7 +145,7 @@ services:
   rclone:
     image: rclone/rclone:latest
     container_name: rclone
-    restart: unless-stopped
+    restart: always
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
@@ -171,12 +171,15 @@ services:
       --umask=000
       --dir-perms=0777
       --file-perms=0666
-      --dir-cache-time=1s
-      --multi-thread-streams=0
+      --dir-cache-time=2m
+      --multi-thread-streams=4
       --cutoff-mode=cautious
       --vfs-cache-mode=full
       --vfs-cache-max-size=500G
-      --buffer-size=128M
+      --vfs-cache-max-age=72h
+      --vfs-read-ahead=512M
+      --vfs-read-chunk-size=64M
+      --buffer-size=512M
       --cache-dir=/cache
       --log-level=INFO
 
@@ -193,20 +196,26 @@ services:
     ports:
       - 9696:9696  # Prowlarr
       - 8191:8191  # FlareSolverr
+      - 8084:8084  # Shelfmark
     sysctls:
       - net.ipv6.conf.all.disable_ipv6=1
     environment:
       - DOT=off
       - DOT_CACHING=off
       - BLOCK_MALICIOUS=off
-      - DNS_ADDRESS=1.1.1.1
+      - DNS_ADDRESS=194.242.2.2
       - VPN_SERVICE_PROVIDER=surfshark
       - VPN_TYPE=wireguard
       - WIREGUARD_PRIVATE_KEY=${SURFSHARK_PRIVATE_KEY}
       - WIREGUARD_ADDRESSES=${SURFSHARK_ADDRESSES}
       - SERVER_COUNTRIES=${VPN_COUNTRY}
       - TZ=${TZ}
-    restart: unless-stopped
+    restart: always
+    extra_hosts:
+      - "annas-archive.se:186.2.165.77"
+      - "annas-archive.li:186.2.165.77"
+      - "annas-archive.pm:186.2.165.77"
+      - "annas-archive.in:186.2.165.77"
 
   prowlarr:
     image: lscr.io/linuxserver/prowlarr:latest
@@ -220,7 +229,7 @@ services:
       - ./prowlarr:/config
     depends_on:
       - vpn
-    restart: unless-stopped
+    restart: always
 
   flaresolverr:
     image: ghcr.io/flaresolverr/flaresolverr:latest
@@ -231,15 +240,15 @@ services:
       - TZ=${TZ}
     depends_on:
       - vpn
-    restart: unless-stopped
+    restart: always
 
   # ===================
   # Statistics & Monitoring
   # ===================
   jellystat-db:
-    image: postgres:15.2
+    image: postgres:15
     container_name: jellystat-db
-    restart: unless-stopped
+    restart: always
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -249,7 +258,7 @@ services:
   jellystat:
     image: cyfershepard/jellystat:latest
     container_name: jellystat
-    restart: unless-stopped
+    restart: always
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -277,7 +286,7 @@ services:
     environment:
       - TZ=${TZ}
       - PROFILARR_PAT=${GITHUB_PAT}
-    restart: unless-stopped
+    restart: always
 
   cleanuparr:
     image: ghcr.io/cleanuparr/cleanuparr:latest
@@ -290,7 +299,7 @@ services:
       - TZ=${TZ}
       - PUID=${PUID}
       - PGID=${PGID}
-    restart: unless-stopped
+    restart: always
 
   huntarr:
     image: huntarr/huntarr:latest
@@ -301,7 +310,7 @@ services:
       - ./huntarr:/config
     environment:
       - TZ=${TZ}
-    restart: unless-stopped
+    restart: always
 
   bazarr:
     image: lscr.io/linuxserver/bazarr:latest
@@ -321,7 +330,53 @@ services:
       - /data/symlinks:/data/symlinks
     ports:
       - 6767:6767
-    restart: unless-stopped
+    restart: always
     depends_on:
       rclone:
         condition: service_started
+
+  # ===================
+  # Books & Audiobooks
+  # ===================
+
+  # Shelfmark - Ebook & Audiobook Download Manager
+  # UI: http://<host>:8084
+  # Docs: https://github.com/calibrain/shelfmark
+  shelfmark:
+    image: ghcr.io/calibrain/shelfmark:latest
+    container_name: shelfmark
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+      - FLASK_PORT=8084
+      - INGEST_DIR=/books
+      - SEARCH_MODE=universal
+      - PYTHONHTTPSVERIFY=0
+    volumes:
+      - ./shelfmark:/config
+      - /storage/media/books:/books
+      - /data/symlinks/books:/downloads
+    network_mode: "service:vpn"
+    depends_on:
+      - vpn
+    #ports:
+      #- 8084:8084
+    restart: always
+
+  # Audiobookshelf - Audiobook & Podcast Server
+  # UI: http://<host>:13378
+  # Mobile apps: iOS & Android available
+  audiobookshelf:
+    image: ghcr.io/advplyr/audiobookshelf:latest
+    container_name: audiobookshelf
+    user: "${PUID}:${PGID}"
+    volumes:
+      - ./audiobookshelf:/config
+      - /storage/media/audiobooks:/audiobooks
+      - /storage/media/books:/books
+      - /storage/media/podcasts:/podcasts
+      - /storage/media/audiobookshelf-metadata:/metadata
+    ports:
+      - 13378:80
+    restart: always
