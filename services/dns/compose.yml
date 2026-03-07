@@ -1,0 +1,26 @@
+services:
+  adguard:
+    image: adguard/adguardhome:latest
+    container_name: adguard
+    restart: always
+    network_mode: host
+    volumes:
+      - ./adguard/work:/opt/adguardhome/work
+      - ./adguard/conf:/opt/adguardhome/conf
+    environment:
+      - TZ=${TZ:-Asia/Kolkata}
+    depends_on:
+      unbound:
+        condition: service_started
+
+  unbound:
+    image: mvance/unbound:latest
+    container_name: unbound
+    restart: always
+    ports:
+      - "5335:53/tcp"
+      - "5335:53/udp"
+    volumes:
+      - ./unbound/unbound.conf:/opt/unbound/etc/unbound/unbound.conf:ro
+    environment:
+      - TZ=${TZ:-Asia/Kolkata}
