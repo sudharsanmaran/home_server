@@ -4,36 +4,68 @@ Self-hosted home server infrastructure running multiple services in Docker conta
 
 ## Services
 
+### DNS (AdGuard Home + Unbound)
+
+Network-wide ad blocking and recursive DNS resolution.
+
+**Location**: `services/dns/`
+**Ports**: 53 (DNS), 3001 (AdGuard UI), 5335 (Unbound)
+
+- AdGuard Home for DNS filtering and ad blocking
+- Unbound as a recursive DNS resolver for privacy
+
 ### Media Server
-Automated media streaming and management stack with Jellyfin, Radarr, Sonarr, and AllDebrid cloud integration.
+
+Automated media streaming and management stack with AllDebrid cloud integration.
 
 **Location**: `services/media/`
 **Documentation**: [Media Server README](services/media/README.md)
-**Key Ports**: 8096 (Jellyfin), 7878 (Radarr), 8989 (Sonarr), 5055 (Jellyseerr), 9696 (Prowlarr)
 
-Features:
-- Jellyfin media server with hardware transcoding
-- Radarr/Sonarr for automated movie/TV management
-- AllDebrid integration via rclone mount
-- Prowlarr indexer management (through VPN)
-- Jellyseerr for media requests
-- Jellystat for analytics
-- Automated MKV to MP4 conversion
+| Sub-service | Port | Notes |
+|-------------|------|-------|
+| Jellyfin | 8096 | Media server with hardware transcoding |
+| Radarr | 7878 | Movie management |
+| Sonarr | 8989 | TV show management |
+| Bazarr | 6767 | Subtitle management |
+| Prowlarr | 9696 | Indexer management (via VPN) |
+| Jellyseerr | 5055 | Media requests |
+| Seerr | 5056 | Media requests (alternative) |
+| RDTClient | 6500 | Real-Debrid torrent client |
+| Jellystat | 3000 | Jellyfin analytics |
+| Shelfmark | 8084 | Bookmarking (via VPN) |
+| Audiobookshelf | 13378 | Audiobook/podcast server |
+| Profilarr | 6868 | Profile management |
+| Cleanuparr | 11011 | Automated cleanup |
+| Huntarr | 9705 | Hunt for missing media |
+| FlareSolverr | 8191 | CAPTCHA solver (via VPN) |
+| Rclone | -- | Cloud mount for AllDebrid |
+| VPN/Gluetun | -- | Surfshark WireGuard tunnel |
 
 ### Immich
-Self-hosted Google Photos alternative with AI-powered features.
+
+Self-hosted photo management with AI-powered features.
 
 **Location**: `services/immich/`
 **Documentation**: [Immich README](services/immich/README.md)
 **Port**: 2283
 
-Features:
 - Photo and video backup
 - Face recognition and object detection
-- Semantic search
 - Hardware-accelerated transcoding
 
+### Management (Caddy + Portainer + Glances)
+
+Reverse proxy, container management, and system monitoring.
+
+**Location**: `services/management/`
+**Ports**: 9000/9443 (Portainer), 29999 (Glances)
+
+- Caddy as a reverse proxy
+- Portainer for container management UI
+- Glances for system monitoring
+
 ### Tailscale VPN
+
 Secure remote access to all services via mesh VPN.
 
 **Location**: `services/tailscale/`
@@ -42,6 +74,7 @@ Secure remote access to all services via mesh VPN.
 ## Quick Start
 
 ### Prerequisites
+
 - Docker and Docker Compose
 - At least 8GB RAM (16GB recommended for Immich ML)
 - 100GB+ storage space
@@ -51,71 +84,61 @@ Secure remote access to all services via mesh VPN.
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/yourusername/home_server.git
+   git clone https://github.com/sudharsanmaran/home_server.git
    cd home_server
    ```
 
 2. **Configure environment variables**
    ```bash
-   # Copy example env files
    cp services/media/.env.example services/media/.env
    cp services/immich/.env.example services/immich/.env
+   cp services/tailscale/.env.example services/tailscale/.env
 
-   # Edit with your values
-   nano services/media/.env
-   nano services/immich/.env
+   # Edit each .env with your values
    ```
 
-3. **Configure rclone (for AllDebrid)**
-   ```bash
-   cp services/media/rclone/rclone.conf.example services/media/rclone/rclone.conf
-   # Edit with your AllDebrid credentials
-   nano services/media/rclone/rclone.conf
-   ```
-
-4. **Start all services**
+3. **Start all services**
    ```bash
    ./scripts/start-all.sh
    ```
 
-### Start Individual Service
-```bash
-cd services/media
-docker compose up -d
-```
-
-### Update All Services
-```bash
-./scripts/update-all.sh
-```
-
-### Stop All Services
-```bash
-./scripts/stop-all.sh
-```
+See [docs/GETTING_STARTED.md](docs/GETTING_STARTED.md) for the full setup guide.
 
 ## Structure
 
 ```
 home_server/
 ├── services/
-│   ├── media/                   # Media streaming stack
-│   │   ├── compose.yml          # Docker compose configuration
-│   │   ├── .env.example         # Environment template
-│   │   └── rclone/              # Rclone configuration for AllDebrid
+│   ├── dns/                     # AdGuard Home + Unbound
+│   │   ├── compose.yml
+│   │   ├── adguard/             # AdGuard config (gitignored)
+│   │   └── unbound/             # Unbound config
 │   ├── immich/                  # Photo management
 │   │   ├── compose.yml
 │   │   └── .env.example
-│   └── tailscale/               # VPN service
-│       └── compose.yml
+│   ├── management/              # Caddy + Portainer + Glances
+│   │   ├── compose.yml
+│   │   └── caddy/Caddyfile
+│   ├── media/                   # Media streaming stack
+│   │   ├── compose.yml
+│   │   ├── .env.example
+│   │   └── rclone/             # Rclone config for AllDebrid
+│   └── tailscale/              # VPN service
+│       ├── compose.yml
+│       └── .env.example
 ├── scripts/
-│   ├── start-all.sh             # Start all services
-│   ├── stop-all.sh              # Stop all services
-│   ├── update-all.sh            # Update all services
-│   ├── backup.sh                # Backup configurations
-│   ├── restart-rclone.sh        # Restart rclone mount
-│   ├── validate-jellyfin-gpu.sh # Validate GPU transcoding
-│   └── media-conversion/        # MKV to MP4 conversion tools
+│   ├── start-all.sh
+│   ├── stop-all.sh
+│   ├── update-all.sh
+│   ├── restart-rclone.sh
+│   ├── backup.sh
+│   ├── kill-stuck-container.sh
+│   ├── validate-jellyfin-gpu.sh
+│   └── common.sh
+├── docs/
+│   └── GETTING_STARTED.md
+├── restart-all.sh              # Boot recovery script
+├── homeserver-recovery.service # Systemd service
 └── README.md
 ```
 
@@ -123,13 +146,15 @@ home_server/
 
 ### Environment Variables
 
-Each service has its own `.env.example` file. Copy it to `.env` and configure:
+Each service that requires configuration has a `.env.example` file. Copy it to `.env` and fill in your values.
 
 | Service | Config File | Key Variables |
 |---------|-------------|---------------|
-| Media | `services/media/.env` | ALLDEBRID_API_KEY, SURFSHARK_PRIVATE_KEY, POSTGRES_PASSWORD |
+| Media | `services/media/.env` | ALLDEBRID_API_KEY, SURFSHARK_PRIVATE_KEY, POSTGRES_PASSWORD, JWT_SECRET |
 | Immich | `services/immich/.env` | DB_PASSWORD, UPLOAD_LOCATION |
 | Tailscale | `services/tailscale/.env` | TS_AUTHKEY |
+| DNS | No .env needed | TZ (default in compose) |
+| Management | No .env needed | TZ (default in compose) |
 
 ### AllDebrid Setup
 
@@ -139,13 +164,13 @@ Each service has its own `.env.example` file. Copy it to `.env` and configure:
 
 ### VPN for Prowlarr
 
-Prowlarr runs through a Surfshark VPN container for privacy:
+Prowlarr runs through a Surfshark VPN container (Gluetun) for privacy:
 1. Get WireGuard credentials from [Surfshark](https://my.surfshark.com/vpn/manual-setup/main/wireguard)
 2. Add to `services/media/.env`
 
 ## Security
 
-- **Never commit `.env` files** - they contain secrets
+- **Never commit `.env` files** -- they contain secrets
 - Change all default passwords before first use
 - Use Tailscale for secure remote access
 - Keep services updated regularly
@@ -155,22 +180,19 @@ Prowlarr runs through a Surfshark VPN container for privacy:
 
 ### Rclone Mount Issues
 ```bash
-# Restart rclone and dependent services
 ./scripts/restart-rclone.sh
 ```
 
 ### GPU Transcoding
 ```bash
-# Validate Jellyfin GPU access
 ./scripts/validate-jellyfin-gpu.sh
 ```
 
 ### Container Issues
 ```bash
-# Kill stuck containers
 ./scripts/kill-stuck-container.sh <container_name>
 ```
 
 ## License
 
-MIT License - See individual service licenses for third-party components.
+MIT License -- See individual service licenses for third-party components.
